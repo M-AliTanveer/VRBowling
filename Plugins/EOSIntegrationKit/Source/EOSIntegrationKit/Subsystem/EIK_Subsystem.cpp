@@ -479,6 +479,20 @@ void UEIK_Subsystem::UnRegisterPlayer(FName SessionName)
 	}
 }
 
+void UEIK_Subsystem::RegisterPlayer(FName SessionName,  bool bWasInvited)
+{
+	if(const IOnlineSubsystem *SubsystemRef = IOnlineSubsystem::Get())
+	{
+		if(const IOnlineSessionPtr SessionPtrRef = SubsystemRef->GetSessionInterface())
+		{
+			if(const IOnlineIdentityPtr IdentityPointerRef = SubsystemRef->GetIdentityInterface())
+			{
+				SessionPtrRef->RegisterPlayer(SessionName, *IdentityPointerRef->GetUniquePlayerId(0),bWasInvited);
+			}
+		}
+	}
+}
+
 bool UEIK_Subsystem::ShowFriendUserInterface()
 {
 	const IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get(); // Get the Online Subsystem
@@ -1228,14 +1242,12 @@ void UEIK_Subsystem::OnCreateSessionCompleted(FName SessionName, bool bWasSucces
 {
 	if(bWasSuccessful)
 	{
-		FDelegateHandle SessionJoinHandle;
 		if(const IOnlineSubsystem *SubsystemRef = IOnlineSubsystem::Get())
 		{
 			if(const IOnlineSessionPtr SessionPtrRef = SubsystemRef->GetSessionInterface())
 			{
 					if(const IOnlineIdentityPtr IdentityPointerRef = SubsystemRef->GetIdentityInterface())
 					{
-						SessionPtrRef->RegisterPlayer(SessionName, *IdentityPointerRef->GetUniquePlayerId(0),false);
 						CreateSession_CallbackBP.ExecuteIfBound(bWasSuccessful, SessionName);
 					}
 			}

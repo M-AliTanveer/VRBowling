@@ -341,9 +341,13 @@ public:
 	UFUNCTION(BlueprintPure, DisplayName="Get Epic ID", Category="EOS Integration Kit || Extra")
 	static FString GetEpicID(const FEIKUniqueNetId& UniqueNetId);
 
-	// This is a C++ method definition for getting the Epic ID
+	// This is a C++ method definition for unregistering Players into the session
 	UFUNCTION(BlueprintCallable, DisplayName="Unregister Players", Category="EOS Integration Kit || Sessions")
 	void UnRegisterPlayer(FName SessionName);
+
+	// This is a C++ method definition for registering Players into the session
+	UFUNCTION(BlueprintCallable, DisplayName="Unregister Players", Category="EOS Integration Kit || Sessions")
+	void RegisterPlayer(FName SessionName, bool bWasInvited);
 
 
 	//This is a C++ method definition for getting the auth token of a player from an online subsystem.
