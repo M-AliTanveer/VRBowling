@@ -200,14 +200,21 @@ void UEIK_Subsystem::CreateEOSSession(const FBP_CreateSession_Callback& Result,
 		{
 			FOnlineSessionSettings SessionCreationInfo;
 			SessionCreationInfo.bIsDedicated = bIsDedicatedServer;
+			SessionCreationInfo.bUsesPresence =true;
+			SessionCreationInfo.bAllowJoinViaPresence = true;
+			SessionCreationInfo.bAllowJoinViaPresenceFriendsOnly = false;
 			SessionCreationInfo.bAllowInvites = true;
+			if(bIsDedicatedServer)
+			{
+				SessionCreationInfo.bUsesPresence = false;
+				SessionCreationInfo.bAllowJoinViaPresence = false;
+				SessionCreationInfo.bAllowJoinViaPresenceFriendsOnly = false;
+				SessionCreationInfo.bAllowInvites = false;
+			}
 			SessionCreationInfo.bIsLANMatch = bIsLan;
 			SessionCreationInfo.NumPublicConnections = NumberOfPublicConnections;
 			SessionCreationInfo.bUseLobbiesIfAvailable = false;
 			SessionCreationInfo.bUseLobbiesVoiceChatIfAvailable = false;
-			SessionCreationInfo.bUsesPresence =true;
-			SessionCreationInfo.bAllowJoinViaPresence = true;
-			SessionCreationInfo.bAllowJoinViaPresenceFriendsOnly = false;
 			SessionCreationInfo.bShouldAdvertise = true;
 			SessionCreationInfo.bAllowJoinInProgress = true;
 			
@@ -309,14 +316,19 @@ void UEIK_Subsystem::FindEOSSession(const FBP_FindSession_Callback& Result, TMap
 					SessionSearch->QuerySettings.Set(FName(*Settings_SingleValue.Key), Settings_SingleValue.Value, EOnlineComparisonOp::Equals);
 				}
 			}
-
-
 			SessionSearch->MaxSearchResults = 1000;
- 
 			SessionPtrRef->OnFindSessionsCompleteDelegates.AddUObject(this, &UEIK_Subsystem::OnFindSessionCompleted);
 			SessionPtrRef->FindSessions(0,SessionSearch.ToSharedRef());
 		}
-	}	
+		else
+		{
+			Result.ExecuteIfBound(false, TArray<FSessionFindStruct>());
+		}
+	}
+	else
+	{
+		Result.ExecuteIfBound(false, TArray<FSessionFindStruct>());
+	}
 }
 
 void UEIK_Subsystem::DestroyEosSession(const FBP_DestroySession_Callback& Result, FName SessionName)
@@ -329,6 +341,14 @@ void UEIK_Subsystem::DestroyEosSession(const FBP_DestroySession_Callback& Result
 			SessionPtrRef->OnDestroySessionCompleteDelegates.AddUObject(this,&UEIK_Subsystem::OnDestroySessionCompleted);
 			SessionPtrRef->DestroySession(SessionName);
 		}
+		else
+		{
+			Result.ExecuteIfBound(false);
+		}
+	}
+	else
+	{
+		Result.ExecuteIfBound(false);
 	}
 }
 
@@ -355,15 +375,25 @@ void UEIK_Subsystem::JoinEosSession(const FBP_JoinSession_Callback& Result, FNam
 				else
 				{
 					UE_LOG(LogTemp, Warning, TEXT("Session settings not found"));
+					Result.ExecuteIfBound(false);
 				}
 				SessionPtrRef->OnJoinSessionCompleteDelegates.AddUObject(this, &UEIK_Subsystem::OnJoinSessionCompleted);
 				SessionPtrRef->JoinSession(0, SessionName,SessionResult.OnlineResult);
 			}
+			else
+			{
+				Result.ExecuteIfBound(false);
+			}
+		}
+		else
+		{
+			Result.ExecuteIfBound(false);
 		}
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Session ref not valid"));
+		Result.ExecuteIfBound(false);
 	}
 }
 
@@ -758,14 +788,19 @@ void UEIK_Subsystem::GetPlayerData(const FBP_GetFile_Callback& Result, FString F
 {
 	GetFile_CallbackBP = Result;
 	if(const IOnlineSubsystem *SubsystemRef = IOnlineSubsystem::Get())
-{
-	if(const IOnlineIdentityPtr IdentityPointerRef = SubsystemRef->GetIdentityInterface())
 	{
-		if(const IOnlineUserCloudPtr CloudPointerRef = SubsystemRef->GetUserCloudInterface())
+		if(const IOnlineIdentityPtr IdentityPointerRef = SubsystemRef->GetIdentityInterface())
 		{
-			TSharedPtr<const FUniqueNetId> UserIDRef = IdentityPointerRef->GetUniquePlayerId(0).ToSharedRef();
-			CloudPointerRef->OnReadUserFileCompleteDelegates.AddUObject(this, &UEIK_Subsystem::OnGetFileComplete);
-			CloudPointerRef->ReadUserFile(*UserIDRef, FileName);
+			if(const IOnlineUserCloudPtr CloudPointerRef = SubsystemRef->GetUserCloudInterface())
+			{
+				TSharedPtr<const FUniqueNetId> UserIDRef = IdentityPointerRef->GetUniquePlayerId(0).ToSharedRef();
+				CloudPointerRef->OnReadUserFileCompleteDelegates.AddUObject(this, &UEIK_Subsystem::OnGetFileComplete);
+				CloudPointerRef->ReadUserFile(*UserIDRef, FileName);
+			}
+			else
+			{
+				GetFile_CallbackBP.ExecuteIfBound(false, nullptr);
+			}
 		}
 		else
 		{
@@ -777,15 +812,105 @@ void UEIK_Subsystem::GetPlayerData(const FBP_GetFile_Callback& Result, FString F
 		GetFile_CallbackBP.ExecuteIfBound(false, nullptr);
 	}
 }
+
+void UEIK_Subsystem::EnumerateTitleFiles(const FBP_TitleFileList_Callback& Result)
+{
+	//Coming in Update 1.12
+	TitleFileList_CallbackBP = Result;
+	if(const IOnlineSubsystem *SubsystemRef = IOnlineSubsystem::Get())
+	{
+		if(const IOnlineIdentityPtr IdentityPointerRef = SubsystemRef->GetIdentityInterface())
+		{
+			if(const IOnlineTitleFilePtr TitleFilePtr = SubsystemRef->GetTitleFileInterface())
+			{
+				TitleFilePtr->OnEnumerateFilesCompleteDelegates.AddUObject(this, &UEIK_Subsystem::OnTitleFileListComplete);
+				TitleFilePtr->EnumerateFiles();
+			}
+			else
+			{
+				TitleFileList_CallbackBP.ExecuteIfBound(false, "Failed to get Title File Interface");
+			}
+		}
+		else
+		{
+			TitleFileList_CallbackBP.ExecuteIfBound(false, "Failed to get Online Identity");
+		}
+	}
 	else
 	{
-		GetFile_CallbackBP.ExecuteIfBound(false, nullptr);
+		TitleFileList_CallbackBP.ExecuteIfBound(false, "Failed to get Online Subsystem");
 	}
+}
+
+TArray<FFileListStruct> UEIK_Subsystem::GetTitleFileList()
+{
+	if(const IOnlineSubsystem *SubsystemRef = IOnlineSubsystem::Get())
+	{
+		if(const IOnlineIdentityPtr IdentityPointerRef = SubsystemRef->GetIdentityInterface())
+		{
+			if(const IOnlineTitleFilePtr TitleFilePtr = SubsystemRef->GetTitleFileInterface())
+			{
+				TArray<FCloudFileHeader> Files;
+				TitleFilePtr->GetFileList(Files);
+				TArray<FFileListStruct> Local_FileList;
+				for(int i =0; i< Files.Num(); i++)
+				{
+					FFileListStruct Temp;
+					Temp.FileName = Files[i].FileName;
+					Temp.FileSize = Files[i].FileSize;
+					Temp.Hash = Files[i].Hash;
+					Temp.HashType = Files[i].HashType;
+					Temp.iChunkID = Files[i].ChunkID;
+					Temp.DLName = Files[i].DLName;
+					Temp.ExternalStorageIds = Files[i].ExternalStorageIds;
+					Temp.URL = Files[i].URL;
+					Local_FileList.Add(Temp);
+				}
+				return Local_FileList;
+			}
+		}
+	}
+	return TArray<FFileListStruct>();
+}
+
+void UEIK_Subsystem::GetTitleFile(const FBP_GetTitleFile_Callback& Result,FString FileName)
+{
+	GetTitleFile_CallbackBP = Result;
+	if(const IOnlineSubsystem *SubsystemRef = IOnlineSubsystem::Get())
+	{
+		if(const IOnlineIdentityPtr IdentityPointerRef = SubsystemRef->GetIdentityInterface())
+		{
+			if(const IOnlineTitleFilePtr TitleFilePtr = SubsystemRef->GetTitleFileInterface())
+			{
+				TitleFilePtr->OnReadFileCompleteDelegates.AddUObject(this, &UEIK_Subsystem::OnTitleFileComplete);
+				TitleFilePtr->ReadFile(FileName);
+				return;
+			}
+		}
+	}
+	GetTitleFile_CallbackBP.ExecuteIfBound(false);
+}
+
+TArray<uint8> UEIK_Subsystem::GetTitleFileContent(FString FileName)
+{
+	if(const IOnlineSubsystem *SubsystemRef = IOnlineSubsystem::Get())
+	{
+		if(const IOnlineIdentityPtr IdentityPointerRef = SubsystemRef->GetIdentityInterface())
+		{
+			if(const IOnlineTitleFilePtr TitleFilePtr = SubsystemRef->GetTitleFileInterface())
+			{
+				TArray<uint8> TitleFileContent;
+				TitleFilePtr->GetFileContents(FileName, TitleFileContent);
+				return TitleFileContent;
+			}
+		}
+	}
+	return TArray<uint8>();
 }
 
 void UEIK_Subsystem::GetLeaderboard(const FBP_GetFile_Callback& Result, FName LeaderboardName, int32 Rank, int32 Range)
 {
-	//Coming in 1.1
+	//Coming in 1.12
 	if(const IOnlineSubsystem *SubsystemRef = IOnlineSubsystem::Get())
 	{
 		if(IOnlineIdentityPtr Identity = SubsystemRef->GetIdentityInterface())
@@ -1056,8 +1181,18 @@ void UEIK_Subsystem::OnGetFileComplete(bool bSuccess, const FUniqueNetId& UserID
 	}
 }
 
+void UEIK_Subsystem::OnTitleFileListComplete(bool bSuccess, const FString& Error) const
+{
+	TitleFileList_CallbackBP.ExecuteIfBound(bSuccess, Error);
+}
+
+void UEIK_Subsystem::OnTitleFileComplete(bool bSuccess, const FString& FileName) const
+{
+	GetTitleFile_CallbackBP.ExecuteIfBound(bSuccess);
+}
+
 void UEIK_Subsystem::OnSessionUserInviteAccepted(const bool bWasSuccessful, const int32 ControllerId,
-	FUniqueNetIdPtr UserId, const FOnlineSessionSearchResult& InviteResult)
+                                                 FUniqueNetIdPtr UserId, const FOnlineSessionSearchResult& InviteResult)
 {
 	if (bWasSuccessful)
 	{
