@@ -66,9 +66,6 @@ struct FSessionFindStruct
 
 	UPROPERTY(BlueprintReadWrite, Category="EOS Struct")
 	int32 MaxNumberOfPlayers = 0;
-
-	UPROPERTY(BlueprintReadWrite, Category="EOS Struct")
-	bool bIsDedicatedServer = false;
 };
 
 
@@ -346,7 +343,7 @@ public:
 	void UnRegisterPlayer(FName SessionName);
 
 	// This is a C++ method definition for registering Players into the session
-	UFUNCTION(BlueprintCallable, DisplayName="Unregister Players", Category="EOS Integration Kit || Sessions")
+	UFUNCTION(BlueprintCallable, DisplayName="Register Players", Category="EOS Integration Kit || Sessions")
 	void RegisterPlayer(FName SessionName, bool bWasInvited);
 
 
@@ -400,7 +397,7 @@ public:
 	
 	// This is a C++ method definition for purchasing an item from the store.
 	UFUNCTION(BlueprintPure, Category="EOS Integration Kit || Extra")
-	FString GenerateSessionCode() const;
+	FString GenerateSessionCode(int32 CodeLength = 9) const;
 
 	// This is a C++ method definition for logging in a user locally.
 	void Login(int32 LocalUserNum, FString ID, FString Token, FString Type, const FBP_Login_Callback& Result);
