@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{803C3216-4E4A-F04A-6EA2-989CB853D7AF}",
+	"EngineAssociation": "5.1",
 	"Category": "",
 	"Description": "",
 	"Plugins": [
@@ -10,6 +10,26 @@
 		},
 		{
 			"Name": "OpenXR",
+			"Enabled": true,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Android",
+				"HoloLens"
+			]
+		},
+		{
+			"Name": "OpenXRExpansionPlugin",
+			"Enabled": true,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Android",
+				"HoloLens"
+			]
+		},
+		{
+			"Name": "VRExpansionPlugin",
 			"Enabled": true,
 			"SupportedTargetPlatforms": [
 				"Win64",
