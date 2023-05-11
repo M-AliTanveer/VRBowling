@@ -345,8 +345,15 @@ public:
 	// This is a C++ method definition for registering Players into the session
 	UFUNCTION(BlueprintCallable, DisplayName="Register Players", Category="EOS Integration Kit || Sessions")
 	void RegisterPlayer(FName SessionName, bool bWasInvited);
+	
+	// This is a C++ method definition for starting lobbies and sessions
+	UFUNCTION(BlueprintCallable, DisplayName="Start EOS Session", Category="EOS Integration Kit || Sessions")
+	void StartSession(FName SessionName);
 
-
+	// This is a C++ method definition for starting lobbies and sessions
+	UFUNCTION(BlueprintCallable, DisplayName="End EOS Session", Category="EOS Integration Kit || Sessions")
+	void EndSession(FName SessionName);
+	
 	//This is a C++ method definition for getting the auth token of a player from an online subsystem.
 	UFUNCTION(BlueprintCallable, Category="EOS Integration Kit || Friend")
 	bool ShowFriendUserInterface();

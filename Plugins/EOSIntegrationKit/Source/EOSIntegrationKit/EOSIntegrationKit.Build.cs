@@ -43,7 +43,6 @@ public class EOSIntegrationKit : ModuleRules
 				"OnlineSubsystem",
 				"OnlineSubsystemUtils",
 				"OnlineSubsystemEOS",
-				"EOSVoiceChat",
 				"Json",
 				"JsonUtilities",
 				"HTTP",

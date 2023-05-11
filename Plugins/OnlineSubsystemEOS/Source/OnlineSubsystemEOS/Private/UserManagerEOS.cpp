@@ -451,8 +451,14 @@ void FUserManagerEOS::CreateDeviceID(const FOnlineAccountCredentials& AccountCre
 {
 	EOS_Connect_CreateDeviceIdOptions DeviceIdOptions = {};
 	DeviceIdOptions.ApiVersion = EOS_CONNECT_CREATEDEVICEID_API_LATEST;
-	DeviceIdOptions.DeviceModel = TCHAR_TO_ANSI(*AccountCredentials.Token);
-
+	FString DisplayName = AccountCredentials.Id;
+	if (DisplayName.IsEmpty() || DisplayName.Equals(""))
+	{
+		DisplayName = "DefaultName";
+	}
+	std::string DisplayNameStr(TCHAR_TO_ANSI(*DisplayName));
+	DeviceIdOptions.DeviceModel = DisplayNameStr.c_str();
+	
 	int32 LocalUserNum = 0;
 	FCreateDeviceIDCallback* CallbackObj = new FCreateDeviceIDCallback(AsWeak());
 	CallbackObj->CallbackLambda = [LocalUserNum, AccountCredentials, this](const EOS_Connect_CreateDeviceIdCallbackInfo* Data)

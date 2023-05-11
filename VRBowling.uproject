@@ -37,6 +37,10 @@
 				"Android",
 				"HoloLens"
 			]
+		},
+		{
+			"Name": "WhatsMyPublicIP",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [

@@ -493,6 +493,28 @@ void UEIK_Subsystem::RegisterPlayer(FName SessionName,  bool bWasInvited)
 	}
 }
 
+void UEIK_Subsystem::StartSession(FName SessionName)
+{
+	if(const IOnlineSubsystem *SubsystemRef = IOnlineSubsystem::Get())
+	{
+		if(const IOnlineSessionPtr SessionPtrRef = SubsystemRef->GetSessionInterface())
+		{
+			SessionPtrRef->StartSession(SessionName);
+		}
+	}
+}
+
+void UEIK_Subsystem::EndSession(FName SessionName)
+{
+	if(const IOnlineSubsystem *SubsystemRef = IOnlineSubsystem::Get())
+	{
+		if(const IOnlineSessionPtr SessionPtrRef = SubsystemRef->GetSessionInterface())
+		{
+			SessionPtrRef->EndSession(SessionName);
+		}
+	}
+}
+
 bool UEIK_Subsystem::ShowFriendUserInterface()
 {
 	const IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get(); // Get the Online Subsystem
